@@ -1,4 +1,4 @@
-jQuery(document).ready(function($){
+jQuery(function($) {
 
 	try {
 		plupload_init();
@@ -12,7 +12,7 @@ jQuery(document).ready(function($){
 		var uploader = new plupload.Uploader(ulp_plupload_config);
 
 		// checks if browser supports drag and drop upload, makes some css adjustments if necessary
-		uploader.bind('Init', function(up){
+		uploader.bind('Init', function(up) {
 			var uploaddiv = $('#plupload-upload-ui');
 			
 			if(up.features.dragdrop){

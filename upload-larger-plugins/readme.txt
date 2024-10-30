@@ -2,8 +2,8 @@
 Contributors: DavidAnderson
 Tags: upload larger plugins, upload file limit, plupload, plugins installation
 Requires at least: 3.3
-Tested up to: 6.6
-Stable tag: 1.7
+Tested up to: 6.7
+Stable tag: 1.8
 Donate link: https://david.dw-perspective.org.uk/donate
 License: MIT
 
@@ -22,7 +22,6 @@ Want to see some more quality plugins and products?
 * <a title="WordPress backup, clone and restoration" href="https://updraftplus.com/">UpdraftPlus - best WordPress backup, clone and restore plugin</a>
 * <a title="WooCommerce extensions for WordPress" href="https://www.simbahosting.co.uk/s3/shop/">Some other premium WordPress plugins (mostly WooCommerce extensions)</a>
 * <a href="https://profiles.wordpress.org/davidanderson#content-plugins">Other free plugins on my WordPress profile page</a>
-* <a href="https://www.simbahosting.co.uk/s3/shop/">WooCommerce extensions</a>
 
 == Screenshots ==
 
@@ -46,6 +45,10 @@ There are none. If the plugin is active, then it will replace the upload widget 
 No. It would not be a huge job for someone to extend it to do so; but I personally have no need for that use case.
 
 == Changelog ==
+
+= 1.8 - 30-Oct-2024 =
+
+* TWEAK: Resolve various "Plugin Check" notices
 
 = 1.7 - 08-Aug-2022 =
 
@@ -91,4 +94,4 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 == Upgrade Notice ==
-* Add missing "Text Domain" header to plugin to facilitate translations
+* 1.8 : Coding style amendments

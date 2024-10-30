@@ -1,8 +1,7 @@
 <?php
 /*
 Plugin Name: Upload Larger Plugins
-Version: 1.7
-Plugin URI: https://wordpress.org/plugins/upload-larger-plugins
+Version: 1.8
 Description: Allow plugins larger than the PHP-defined limit to be uploaded.
 Author: David Anderson
 Donate: https://david.dw-perspective.org.uk/donate
@@ -14,7 +13,7 @@ License: MIT
 if (!defined('ABSPATH')) die('No direct access');
 
 // Globals
-define('UPLOADLARGERPLUGINS_VERSION', '1.7');
+define('UPLOADLARGERPLUGINS_VERSION', '1.8');
 define('UPLOADLARGERPLUGINS_SLUG', "upload-larger-plugins");
 define('UPLOADLARGERPLUGINS_DIR', dirname(realpath(__FILE__)));
 define('UPLOADLARGERPLUGINS_URL', plugins_url('', __FILE__));
@@ -53,20 +52,21 @@ class Simba_Upload_Larger_Plugins {
 	 */
 	public function install_plugin_overwrite_actions($install_actions) {
 	
+		// phpcs:disable WordPress.Security.NonceVerification -- handled by WP core
+		
 		if (!empty($install_actions['overwrite_plugin']) && false !== strpos($install_actions['overwrite_plugin'], 'action=upload-plugin&amp;')) {
 		
 			if (!empty($_GET['plugincksha1']) && !empty($_GET['overridebd']) && !empty($_GET['package']) && current_user_can('install_plugins')) {
 			
 				// WP 5.5 already uses "package=0"; so we have to replace that with the proper name that will work with our upload directory
-				$install_actions['overwrite_plugin'] = str_replace('action=upload-plugin&amp;', 'action=upload-plugin&amp;plugincksha1='.urlencode($_GET['plugincksha1']).'&amp;overridebd='.urlencode($_GET['overridebd']).'&amp;package='.urlencode($_GET['package']).'&amp;', $install_actions['overwrite_plugin']);
+				$install_actions['overwrite_plugin'] = str_replace('action=upload-plugin&amp;', 'action=upload-plugin&amp;plugincksha1='.urlencode($_GET['plugincksha1']).'&amp;overridebd='.urlencode(stripslashes($_GET['overridebd'])).'&amp;package='.urlencode(stripslashes($_GET['package'])).'&amp;', $install_actions['overwrite_plugin']); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized  -- the worst that can happen is providing an invalid checksum which then gets blocked anyway
 			
 				$install_actions['overwrite_plugin'] = str_replace('package=0&amp;', '', $install_actions['overwrite_plugin']);
 			}
 		
 		}
 		
-		// error_log(print_r($install_actions, true));
-		
+		// phpcs:enable WordPress.Security.NonceVerification
 		return $install_actions;
 	}
 	
@@ -76,7 +76,7 @@ class Simba_Upload_Larger_Plugins {
 	public function admin_init() {
 
 		// Check if parameters present indicate our action
-		if (empty($_GET['plugincksha1']) || empty($_GET['overridebd']) || !isset($_GET['package']) || !current_user_can('install_plugins')) return;
+		if (empty($_GET['plugincksha1']) || empty($_GET['overridebd']) || !isset($_GET['package']) || !current_user_can('install_plugins')) return; // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.NonceVerification.Recommended  -- wrong recommendations; checksum is being used
 
 		/*
 		Old note:
@@ -91,7 +91,7 @@ class Simba_Upload_Larger_Plugins {
 		// require(ABSPATH.WPINC.'/version.php');
  		// if (version_compare($wp_version, '3.7', '>=')) return;
 
-		$package = (isset($_GET['fpackage']) && is_numeric($_GET['package'])) ? stripslashes($_GET['fpackage']) : stripslashes($_GET['package']);
+		$package = (isset($_GET['fpackage']) && is_numeric($_GET['package'])) ? stripslashes($_GET['fpackage']) : stripslashes($_GET['package']); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- false positive
 
 		$upgrader = new stdClass;
 		$upgrader->strings = array('download_failed' => __('Error when trying to find uploaded file', 'upload-larger-plugins'));
@@ -119,6 +119,8 @@ class Simba_Upload_Larger_Plugins {
 
 	public function upgrader_pre_download($result, $package, $upgrader) {
 
+		//phpcs:disable WordPress.Security.NonceVerification.Recommended -- checksum used
+		
 		if (empty($_GET['plugincksha1']) || empty($_GET['overridebd'])) return $result;
 		$upload_dir = untrailingslashit(get_temp_dir());
 
@@ -128,6 +130,8 @@ class Simba_Upload_Larger_Plugins {
 
 		if (!file_exists($try_file) || sha1_file($try_file) != $_GET['plugincksha1']) return new WP_Error('download_failed', $upgrader->strings['download_failed']);
 
+		//phpcs:enable WordPress.Security.NonceVerification.Recommended
+		
 		return $try_file;
 	}
 
@@ -142,7 +146,7 @@ class Simba_Upload_Larger_Plugins {
 		global $pagenow;
 		// On WP 4.6, there is no longer an upload 'tab' - it's a slide-down instead
 
-		return ($pagenow != 'plugin-install.php' || (version_compare($wp_version, '4.5.9999', '<') && (!isset($_REQUEST['tab']) || 'upload' != $_REQUEST['tab']))) ? false : true;
+		return ($pagenow != 'plugin-install.php' || (version_compare($wp_version, '4.5.9999', '<') && (!isset($_REQUEST['tab']) || 'upload' != $_REQUEST['tab']))) ? false : true; // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- false positive
 		
 	}
 	
@@ -153,7 +157,7 @@ class Simba_Upload_Larger_Plugins {
 
 		if (!$this->is_our_page_and_authorised()) return;
 	
-		wp_enqueue_script('ulp-admin-ui', UPLOADLARGERPLUGINS_URL.'/admin.js', array('jquery', 'plupload-all'), '1');
+		wp_enqueue_script('ulp-admin-ui', UPLOADLARGERPLUGINS_URL.'/admin.js', array('jquery', 'plupload-all'), '1', array('args' => true));
 
 		wp_localize_script('ulp-admin-ui', 'ulplion', array(
 			'notarchive' => __('This file does not appear to be a zip file.', 'upload-larger-plugins'),
@@ -193,9 +197,12 @@ class Simba_Upload_Larger_Plugins {
 	 */
 	public function ulp_plupload_action() {
 
-		@set_time_limit(900);
+		// phpcs:disable WordPress.WP.AlternativeFunctions -- incorrect advice on filesystem functions
+		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- destination is not DB
+		
+		@set_time_limit(900); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- mere opinion
 
-		if (!current_user_can('install_plugins')) return;
+		if (!current_user_can('install_plugins') || !isset($_FILES['async-upload']) || !isset($_POST['name'])) return;
 		check_ajax_referer('uploadlargerplugins-uploader');
 
 		$upload_dir = untrailingslashit(get_temp_dir());
@@ -230,14 +237,14 @@ class Simba_Upload_Larger_Plugins {
 		}
 
 		// Should be a no-op
-		$name = basename($_POST['name']);
+		$name = basename(stripslashes($_POST['name'])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- false positive
 
 		// If this was the chunk, then we should instead be concatenating onto the final file
-		if (isset($_POST['chunks']) && isset($_POST['chunk']) && preg_match('/^[0-9]+$/',$_POST['chunk'])) {
-			# A random element is added, because otherwise it is theoretically possible for another user to upload into a shared temporary directory in between the upload and install, and over-write
+		if (isset($_POST['chunks']) && isset($_POST['chunk']) && preg_match('/^[0-9]+$/', $_POST['chunk'])) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- known not to contain any slash
+			// A random element is added, because otherwise it is theoretically possible for another user to upload into a shared temporary directory in between the upload and install, and over-write
 			$final_file = $name;
-			rename($status['file'], $upload_dir.'/'.$final_file.'.'.$_POST['chunk'].'.zip.tmp');
-			$status['file'] = $upload_dir.'/'.$final_file.'.'.$_POST['chunk'].'.zip.tmp';
+			rename($status['file'], $upload_dir.'/'.$final_file.'.'.$_POST['chunk'].'.zip.tmp'); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- already known to contain no slash
+			$status['file'] = $upload_dir.'/'.$final_file.'.'.$_POST['chunk'].'.zip.tmp'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- known to contain no slash
 
 			// Final chunk? If so, then stich it all back together
 			if ($_POST['chunk'] == $_POST['chunks']-1) {
@@ -262,7 +269,7 @@ class Simba_Upload_Larger_Plugins {
 			$file = basename($status['file']);
 			if (!preg_match('/\.zip$/i', $file, $matches)) {
 				@unlink($status['file']);
-				echo json_encode(array('e' => sprintf(__('Error: %s', 'upload-larger-plugins'), __('This file does not appear to be a zip file.', 'upload-larger-plugins'))));
+				echo json_encode(array('e' => __('Error:', 'upload-larger-plugins').' '.__('This file does not appear to be a zip file.', 'upload-larger-plugins')));
 				exit;
 			}
 		}
@@ -271,6 +278,8 @@ class Simba_Upload_Larger_Plugins {
 		$response['m'] = admin_url('update.php?action=upload-plugin&overridebd='.urlencode(dirname($status['file'])).'&plugincksha1='.sha1_file($status['file']).'&_wpnonce='.wp_create_nonce( 'plugin-upload' ).'&package='.urlencode(basename($status['file'])));
 		echo json_encode($response);
 		exit;
+		
+		// phpcs:enable WordPress.WP.AlternativeFunctions, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	}
 
 	/**
@@ -296,7 +305,7 @@ class Simba_Upload_Larger_Plugins {
 			'max_file_size' => '100Gb',
 			'chunk_size' => $chunk_size.'b',
 			'url' => admin_url('admin-ajax.php'),
-			'filters' => array(array('title' => __('Allowed Files'), 'extensions' => 'zip')),
+			'filters' => array(array('title' => __('Allowed Files'), 'extensions' => 'zip')), // phpcs:ignore WordPress.WP.I18n.MissingArgDomain  -- string from WordPress core
 			'multipart' => true,
 			'multi_selection' => false,
 			'urlstream_upload' => true,
@@ -367,7 +376,9 @@ class Simba_Upload_Larger_Plugins {
 		if (version_compare($wp_version, '4.5.9999', '<')) { ?>
 		
 			<!-- Upload form from Upload Larger Plugins -->
-			<h4><?php _e('Install a plugin in .zip format'); ?></h4>
+			<h4><?php
+			esc_html_e('Install a plugin in .zip format'); // phpcs:ignore WordPress.WP.I18n.MissingArgDomain -- string from WordPress core
+			?></h4>
 			
 		<?php } ?>
 		
@@ -377,22 +388,24 @@ class Simba_Upload_Larger_Plugins {
 	
 		$upload_dir = untrailingslashit(get_temp_dir());
 		if (!$this->really_is_writable($upload_dir)) {
-			echo '<strong>'.sprintf(__("Your hosting's temporary directory (%s) is not writable (as verified by attempting to write to it). You need to fix this (asking your hosting company for help if necessary) to be able to upload any plugins.", 'upload-larger-plugins'), $upload_dir).'</strong>';
+			// translators: directory path
+			echo '<strong>'.sprintf(esc_html__("Your hosting's temporary directory (%s) is not writable (as verified by attempting to write to it). You need to fix this (asking your hosting company for help if necessary) to be able to upload any plugins.", 'upload-larger-plugins'), $upload_dir).'</strong>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- false positive
 		} else {
-			_e('If you have a plugin in a .zip format, you may install it by uploading it here.').'<br>';
+			esc_html_e('If you have a plugin in a .zip format, you may install it by uploading it here.').'<br>'; // phpcs:ignore WordPress.WP.I18n.MissingArgDomain -- string from WordPress core
 		}
 		
 		echo '</p>';
 	
 		if (version_compare($wp_version, '3.3', '<')) {
-			echo '<em>'.sprintf(__('This feature requires %s version %s or later', 'upload-larger-plugins'), 'WordPress', '3.3').'</em>';
+			// translators: WordPress, version number
+			echo '<em>'.sprintf(esc_html__('This feature requires %1$s version %2$s or later', 'upload-larger-plugins'), 'WordPress', '3.3').'</em>';
 		} else {
 			?>
 			<div id="plupload-upload-ui" class="drag-drop" style="width: 70%;">
 				<div id="drag-drop-area">
 					<div class="drag-drop-inside">
-					<p class="drag-drop-info"><?php _e('Drop plugin zip here', 'upload-larger-plugins'); ?></p>
-					<p><?php _ex('or', 'Uploader: Drop plugin zip here - or - Select File'); ?></p>
+					<p class="drag-drop-info"><?php esc_html_e('Drop plugin zip here', 'upload-larger-plugins'); ?></p>
+					<p><?php echo esc_html_x('or', 'Uploader: Drop plugin zip here - or - Select File');  // phpcs:ignore WordPress.WP.I18n.MissingArgDomain -- string from WordPress core ?></p>
 					<p class="drag-drop-buttons"><input id="plupload-browse-button" type="button" value="<?php echo esc_attr(__('Select File', 'upload-larger-plugins')); ?>" class="button" /></p>
 					</div>
 				</div>
@@ -425,16 +438,22 @@ class Simba_Upload_Larger_Plugins {
 	 * @return Boolean - the result
 	 */
 	private function really_is_writable($dir) {
+		
+		// phpcs:disable WordPress.WP.AlternativeFunctions -- incorrect filesystem suggestions
+		
 		// Suppress warnings, since if the user is dumping warnings to screen, then invalid JavaScript results and the screen breaks.
 		if (!@is_writable($dir)) return false;// phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged
 		// Found a case - GoDaddy server, Windows, PHP 5.2.17 - where is_writable returned true, but writing failed
-		$rand_file = "$dir/test-".md5(rand().time()).".txt";
+		$rand_file = "$dir/test-".md5(rand().time()).".txt"; // phpcs:ignore WordPress.WP.AlternativeFunctions.rand_rand -- cryptographic randomness not required
 		while (file_exists($rand_file)) {
-			$rand_file = "$dir/test-".md5(rand().time()).".txt";
+			$rand_file = "$dir/test-".md5(rand().time()).".txt"; // phpcs:ignore WordPress.WP.AlternativeFunctions.rand_rand -- cryptographic randomness not required
 		}
 		$ret = @file_put_contents($rand_file, 'testing...');// phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged
 		@unlink($rand_file);// phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged
 		return ($ret > 0);
+		
+		// phpcs:enable WordPress.WP.AlternativeFunctions
+		
 	}
 	
 	public function action_links($links, $file) {
