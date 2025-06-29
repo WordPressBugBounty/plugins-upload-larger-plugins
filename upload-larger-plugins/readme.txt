@@ -2,7 +2,7 @@
 Contributors: DavidAnderson
 Tags: upload larger plugins, upload file limit, plupload, plugins installation
 Requires at least: 3.3
-Tested up to: 6.7
+Tested up to: 6.8
 Stable tag: 1.8
 Donate link: https://david.dw-perspective.org.uk/donate
 License: MIT
