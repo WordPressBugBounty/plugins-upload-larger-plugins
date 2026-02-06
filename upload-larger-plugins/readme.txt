@@ -2,8 +2,8 @@
 Contributors: DavidAnderson
 Tags: upload larger plugins, upload file limit, plupload, plugins installation
 Requires at least: 3.3
-Tested up to: 6.8
-Stable tag: 1.8
+Tested up to: 6.9
+Stable tag: 2.0
 Donate link: https://david.dw-perspective.org.uk/donate
 License: MIT
 
@@ -45,6 +45,14 @@ There are none. If the plugin is active, then it will replace the upload widget 
 No. It would not be a huge job for someone to extend it to do so; but I personally have no need for that use case.
 
 == Changelog ==
+
+= 2.0 - 17-Nov-2025 =
+
+* TWEAK: Only reference Flash files on relevant (older) versions
+
+= 1.9 - 25-Aug-2025 =
+
+* TWEAK: Resolve jQuery deprecation for .bind()
 
 = 1.8 - 30-Oct-2024 =
 
@@ -94,4 +102,4 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 == Upgrade Notice ==
-* 1.8 : Coding style amendments
+* 2.0 : Remove references to obsolete Flash files

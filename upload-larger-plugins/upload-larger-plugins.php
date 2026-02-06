@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Upload Larger Plugins
-Version: 1.8
+Version: 2.0
 Description: Allow plugins larger than the PHP-defined limit to be uploaded.
 Author: David Anderson
 Donate: https://david.dw-perspective.org.uk/donate
@@ -13,7 +13,7 @@ License: MIT
 if (!defined('ABSPATH')) die('No direct access');
 
 // Globals
-define('UPLOADLARGERPLUGINS_VERSION', '1.8');
+define('UPLOADLARGERPLUGINS_VERSION', '2.0');
 define('UPLOADLARGERPLUGINS_SLUG', "upload-larger-plugins");
 define('UPLOADLARGERPLUGINS_DIR', dirname(realpath(__FILE__)));
 define('UPLOADLARGERPLUGINS_URL', plugins_url('', __FILE__));
@@ -289,7 +289,7 @@ class Simba_Upload_Larger_Plugins {
 
 		if (!$this->is_our_page_and_authorised()) return;
 
- 		$chunk_size = min(wp_max_upload_size()-1024, 1024*1024*2-1024);
+ 		$chunk_size = min(wp_max_upload_size()-1024, 1048576*2-1024);
 
 		# The multiple_queues argument is ignored in plupload 2.x (WP3.9+) - https://make.wordpress.org/core/2014/04/11/plupload-2-x-in-wordpress-3-9/
 		# max_file_size is also in filters as of plupload 2.x, but in its default position is still supported for backwards-compatibility. Likewise, our use of filters.extensions below is supported by a backwards-compatibility option (the current way is filters.mime-types.extensions
@@ -315,23 +315,21 @@ class Simba_Upload_Larger_Plugins {
 				'action' => 'ulp_plupload_action'
 			)
 		);
-// 			'flash_swf_url' => includes_url('js/plupload/plupload.flash.swf'),
-// 			'silverlight_xap_url' => includes_url('js/plupload/plupload.silverlight.xap'),
 
-		# WP 3.9 updated to plupload 2.0 - https://core.trac.wordpress.org/ticket/25663
-		if (is_file(ABSPATH.'wp-includes/js/plupload/Moxie.swf')) {
+		// WP 3.9 updated to plupload 2.0 - https://core.trac.wordpress.org/ticket/25663
+		if (is_file(ABSPATH.WPINC.'/js/plupload/Moxie.swf')) {
 			$plupload_init['flash_swf_url'] = includes_url('js/plupload/Moxie.swf');
-		} else {
+		} elseif (is_file(ABSPATH.WPINC.'/js/plupload/plupload.flash.swf')) {
 			$plupload_init['flash_swf_url'] = includes_url('js/plupload/plupload.flash.swf');
 		}
 
-		if (is_file(ABSPATH.'wp-includes/js/plupload/Moxie.xap')) {
+		if (is_file(ABSPATH.WPINC.'/js/plupload/Moxie.xap')) {
 			$plupload_init['silverlight_xap_url'] = includes_url('js/plupload/Moxie.xap');
-		} else {
+		} elseif (is_file(ABSPATH.WPINC.'/js/plupload/plupload.silverlight.swf')) {
 			$plupload_init['silverlight_xap_url'] = includes_url('js/plupload/plupload.silverlight.swf');
 		}
 
-		?><script type="text/javascript">
+		?><script>
 			var ulp_plupload_config=<?php echo json_encode($plupload_init); ?>;
 		</script>
 		<style type="text/css">
@@ -458,7 +456,7 @@ class Simba_Upload_Larger_Plugins {
 	
 	public function action_links($links, $file) {
 		if ($file == UPLOADLARGERPLUGINS_SLUG."/".basename(__FILE__)) {
-			array_unshift( $links, 
+			array_unshift($links, 
 				'<a href="options-general.php?page=upload_larger_plugins">'.__('Settings', 'upload-larger-plugins').'</a>'
 			);
 		}

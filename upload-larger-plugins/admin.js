@@ -15,11 +15,16 @@ jQuery(function($) {
 		uploader.bind('Init', function(up) {
 			var uploaddiv = $('#plupload-upload-ui');
 			
-			if(up.features.dragdrop){
+			if (up.features.dragdrop) {
 				uploaddiv.addClass('drag-drop');
+				
 				$('#drag-drop-area')
-				.bind('dragover.wp-uploader', function(){ uploaddiv.addClass('drag-over'); })
-				.bind('dragleave.wp-uploader, drop.wp-uploader', function(){ uploaddiv.removeClass('drag-over'); });
+				.on('dragover.wp-uploader', function() {
+					uploaddiv.addClass('drag-over');
+				})
+				.on('dragleave.wp-uploader drop.wp-uploader', function() {
+					uploaddiv.removeClass('drag-over');
+				});
 				
 			} else {
 				uploaddiv.removeClass('drag-drop');
